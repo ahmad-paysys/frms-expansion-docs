@@ -10,6 +10,10 @@ This directory contains documentation and change reports for the BaseMessage exp
 
 Knowledge transfer document covering the full BaseMessage wiring across four phases: interface and protobuf expansion, SafeObject schema enforcement, rule executor Redis integration, and CIMS service extension. Explains the design decisions, type guards, protobuf normalisation, and the SafeObject proxy pattern with references to each source file involved.
 
+### [SundayStatus.md](SundayStatus.md)
+
+Everything in the works for Build 1.1, and what we got done over the weekend.
+
 ### [Report-FRMS-COE-LIB-2Week-FunctionalDelta.md](Report-FRMS-COE-LIB-2Week-FunctionalDelta.md)
 
 Focused summary of runtime-impacting changes only. Lists each modified source file alongside its functional delta and associated commits. Includes risk notes highlighting integration-sensitive contract changes and breaking wire-format shifts. Designed for quick assessment of what changed and what could break.
