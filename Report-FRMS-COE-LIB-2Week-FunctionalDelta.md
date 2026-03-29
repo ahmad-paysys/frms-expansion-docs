@@ -28,7 +28,7 @@ Excluded from this appendix:
 | File | Runtime-impact delta | Commit(s) |
 |---|---|---|
 | `src/services/redis.ts` | Added schema-bundle retrieval API `getEndpointSchemaBundle(endpointPath)`; internal behavior cleanup via constants for indexing and empty checks; removed explicit `'OK'` validation in `setJson`/`set` paths | `f2d2828` |
-| `src/helpers/protobuf.ts` | Added BaseMessage payload normalization/denormalization in buffer encode/decode flow (`createMessageBuffer`, `decodeMessageBuffer`) | `372b3f9` |
+| `src/helpers/protobuf.ts` | Added BaseMessage payload normalization/denormalization in buffer encode/decode flow (`createMessageBuffer`, `decodeMessageBuffer`); refactored normalise/denormalise to use `data.transaction` instead of deprecated `data.BaseMessage`/`data.baseMessage` key; imported and integrated `isBaseMessageTransaction`/`isPacs002Transaction` type guards for routing; added `isRecord` helper; non-Pacs002 transactions missing required fields now throw instead of silently passing | `372b3f9`, `d62b436` |
 | `src/interfaces/BaseMessage.ts` | Contract-level transaction shape changes (required `MsgId`, optional `endpointPath`, payload shape/union evolution) impacting consumers at compile/runtime integration boundaries | `372b3f9`, `95468e6`, `961f5d9` |
 | `src/interfaces/metaData.ts` | `endpointPath` field added then removed (moved to BaseMessage), changing where endpoint identity is expected | `95468e6`, `961f5d9` |
 | `src/interfaces/index.ts` | Removed `TransferAmount` export from barrel, affecting import availability for downstream consumers | `372b3f9` |
@@ -40,11 +40,14 @@ Excluded from this appendix:
 
 - **High integration sensitivity:** `BaseMessage`/`MetaData` contract moves (`MsgId`, `endpointPath`) can break consumers expecting prior shape.
 - **Transport payload handling:** `protobuf.ts` normalization/denormalization modifies effective encoded/decoded shape for BaseMessage-style payloads.
+- **Breaking wire-format change:** `protobuf.ts` now reads/writes BaseMessage under `data.transaction` instead of the previous `data.BaseMessage`/`data.baseMessage` top-level keys. Buffers encoded with the old key will no longer round-trip through `decodeMessageBuffer`. The corresponding `Full.proto` removed the standalone `BaseMessage` message and top-level `baseMessage` field; BaseMessage fields are now inline on the `Transaction` message.
+- **Strict validation on encode:** `createMessageBuffer` now throws (returns `undefined`) for non-Pacs002 transactions that lack `TxTp`, `TenantId`, `MsgId`, or `Payload`, where previously they would silently encode as empty.
 
 ---
 
 ## Commit index (runtime files only)
 
+- `d62b436` — Feat: added type guards for Pacs002 and BaseMessage, cleaned up protobuf.ts for BaseMessage to make the behaviour consistent, made some changes to SafeObject but SafeObject is on hold until after Build 1.1
 - `f2d2828` — feat: updated the lib with safeObject implementation tied to schema from Redis
 - `961f5d9` — Update: Updated the lib to move endpointPath out of MetaData and into the BaseMessage interface/descriptor. also, removed the token added by accident.
 - `95468e6` — Updated the lib with MsgId for BaseMessage and added an optional field endpointPath in the MetaData interface/descriptor for schema registery implementation

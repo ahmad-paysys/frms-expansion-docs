@@ -107,9 +107,14 @@ Requested exclusions applied:
 - `createMessageBuffer` changed to normalize BaseMessage payload before encoding
 - `decodeMessageBuffer` added/updated to denormalize BaseMessage payload after decoding
 - Documentation comment added for decode path in this period
+- Refactored `normaliseBaseMessagePayload` and `denormaliseBaseMessagePayload` to use `data.transaction` key instead of deprecated `data.BaseMessage`/`data.baseMessage` top-level keys
+- Added `isRecord` local helper
+- Imported and integrated `isBaseMessageTransaction` and `isPacs002Transaction` type guards from `./transactionTypeGuards`
+- Non-Pacs002 transactions missing required BaseMessage fields (`TxTp`, `TenantId`, `MsgId`, `Payload`) now cause `createMessageBuffer` to throw (returns `undefined`) instead of silently encoding
 
 ### Commits
 - `372b3f9` (2026-03-24) — First version of the lib. Need to take a look at frms-coe-startup-lib right after.
+- `d62b436` (2026-03-29) — Feat: added type guards for Pacs002 and BaseMessage, cleaned up protobuf.ts for BaseMessage to make the behaviour consistent, made some changes to SafeObject but SafeObject is on hold until after Build 1.1
 
 ---
 
@@ -124,9 +129,18 @@ Requested exclusions applied:
 - Added test cases:
   - `se/deserialise BaseMessage with dynamic payload object`
   - `keeps raw payload when BaseMessage.Payload.Json is malformed`
+- Refactored existing test cases to use `transaction` key instead of `BaseMessage` top-level key
+- Renamed test descriptions to reference "transaction BaseMessage"
+- Test data updated to include `MsgId` and `endpointPath` fields
+- Assertions updated to verify round-trip via `decoded?.transaction` instead of `decoded?.BaseMessage`
+- Added new test cases:
+  - `rejects non-pacs002 transaction when MsgId is missing`
+  - `rejects non-pacs002 transaction when Payload is missing`
+  - `rejects deprecated top-level BaseMessage shape`
 
 ### Commits
 - `372b3f9` (2026-03-24) — First version of the lib. Need to take a look at frms-coe-startup-lib right after.
+- `d62b436` (2026-03-29) — Feat: added type guards for Pacs002 and BaseMessage, cleaned up protobuf.ts for BaseMessage to make the behaviour consistent, made some changes to SafeObject but SafeObject is on hold until after Build 1.1
 
 ---
 
@@ -139,9 +153,17 @@ Requested exclusions applied:
   - `createSafeObjectFromEndpoint` usage
   - endpoint key requirements
   - fail-fast behavior expectations
+- Expanded section 5 with:
+  - `EndpointPath Contract` subsection (replacing shorter "Endpoint key requirements")
+  - `Runtime Guarantees (Fail-Fast)` subsection (replacing "Failure policy")
+  - `Temporary POC Compatibility Note` documenting EMS-style Redis env var fallback
+  - `Canonical BaseMessage transaction shape` JSON example showing required `transaction` envelope with `TxTp`, `TenantId`, `MsgId`, `endpointPath`, and `Payload`
+  - Updated usage example to include `currency` access
+  - Added prose clarifying required vs optional BaseMessage fields for non-Pacs002 flows
 
 ### Commits
 - `f2d2828` (2026-03-27) — feat: updated the lib with safeObject implementation tied to schema from Redis
+- `d62b436` (2026-03-29) — Feat: added type guards for Pacs002 and BaseMessage, cleaned up protobuf.ts for BaseMessage to make the behaviour consistent, made some changes to SafeObject but SafeObject is on hold until after Build 1.1
 
 ---
 
@@ -158,27 +180,31 @@ Requested exclusions applied:
 ## 10) `package.json`
 
 ### Metadata / scripts changed
-- Version bumps in this period
-- `publish:dev` tag adjusted in one commit path
+- Version bumps in this period (latest: `7.0.1-rc.ak.17`)
+- `publish:dev` tag changed from `psl-dev-ahmad-khalid` to `psl`
 - Changes tracked as package metadata/script updates (no runtime method/interface symbols)
 
 ### Commits
 - `372b3f9` (2026-03-24) — First version of the lib. Need to take a look at frms-coe-startup-lib right after.
 - `961f5d9` (2026-03-25) — Update: Updated the lib to move endpointPath out of MetaData and into the BaseMessage interface/descriptor. also, removed the token added by accident.
 - `f2d2828` (2026-03-27) — feat: updated the lib with safeObject implementation tied to schema from Redis
+- `d62b436` (2026-03-29) — Feat: added type guards for Pacs002 and BaseMessage, cleaned up protobuf.ts for BaseMessage to make the behaviour consistent, made some changes to SafeObject but SafeObject is on hold until after Build 1.1
 
 ---
 
 ## 11) `package-lock.json`
 
 ### Metadata / dependency lock changes
+
 - Lockfile updates corresponding to package/version/script/dependency-state changes in the same commit stream
 - Changes are lock-state only (no runtime method/interface symbols)
 
 ### Commits
+
 - `372b3f9` (2026-03-24) — First version of the lib. Need to take a look at frms-coe-startup-lib right after.
 - `961f5d9` (2026-03-25) — Update: Updated the lib to move endpointPath out of MetaData and into the BaseMessage interface/descriptor. also, removed the token added by accident.
 - `f2d2828` (2026-03-27) — feat: updated the lib with safeObject implementation tied to schema from Redis
+- `d62b436` (2026-03-29) — Feat: added type guards for Pacs002 and BaseMessage, cleaned up protobuf.ts for BaseMessage to make the behaviour consistent, made some changes to SafeObject but SafeObject is on hold until after Build 1.1
 
 ---
 

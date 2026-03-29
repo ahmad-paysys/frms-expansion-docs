@@ -30,6 +30,7 @@
 | `src/interfaces/index.ts` | Commented out export of `TransferAmount` | `372b3f9` | First version of the lib. Need to take a look at frms-coe-startup-lib right after. |
 | `src/interfaces/TransferAmount.ts` | File removed (name-status showed deletion in period) | `372b3f9` | First version of the lib. Need to take a look at frms-coe-startup-lib right after. |
 | `src/helpers/protobuf.ts` | Added `normaliseBaseMessagePayload` and `denormaliseBaseMessagePayload`; updated `createMessageBuffer` normalization path; added/updated `decodeMessageBuffer` denormalization path | `372b3f9` | First version of the lib. Need to take a look at frms-coe-startup-lib right after. |
+| `src/helpers/protobuf.ts` | Refactored normalise/denormalise to use `data.transaction` key (removed deprecated `data.BaseMessage`/`data.baseMessage`); added `isRecord` helper; imported `isBaseMessageTransaction`/`isPacs002Transaction` type guards; non-Pacs002 transactions missing required fields now throw | `d62b436` | Feat: added type guards for Pacs002 and BaseMessage, cleaned up protobuf.ts for BaseMessage to make the behaviour consistent, made some changes to SafeObject but SafeObject is on hold until after Build 1.1 |
 
 ---
 
@@ -38,7 +39,9 @@
 | File | Test blocks / sections changed | Commit | Commit message |
 |---|---|---|---|
 | `__tests__/utils.test.ts` | Added `createMessageBuffer` and `decodeMessageBuffer` imports; added BaseMessage serialization/deserialization describe block + two test cases | `372b3f9` | First version of the lib. Need to take a look at frms-coe-startup-lib right after. |
+| `__tests__/utils.test.ts` | Refactored tests to use `transaction` key instead of `BaseMessage`; added `MsgId`/`endpointPath` to test data; added three new test cases: missing `MsgId` rejection, missing `Payload` rejection, deprecated top-level `BaseMessage` shape rejection | `d62b436` | Feat: added type guards for Pacs002 and BaseMessage, cleaned up protobuf.ts for BaseMessage to make the behaviour consistent, made some changes to SafeObject but SafeObject is on hold until after Build 1.1 |
 | `README.md` | Added ToC entry and section `Schema-Safe Dot Notation Access` with usage, endpoint key requirements, fail-fast policy | `f2d2828` | feat: updated the lib with safeObject implementation tied to schema from Redis |
+| `README.md` | Expanded section 5: `EndpointPath Contract`, `Runtime Guarantees (Fail-Fast)`, `Temporary POC Compatibility Note` (EMS Redis fallback), canonical BaseMessage JSON example, required vs optional field prose | `d62b436` | Feat: added type guards for Pacs002 and BaseMessage, cleaned up protobuf.ts for BaseMessage to make the behaviour consistent, made some changes to SafeObject but SafeObject is on hold until after Build 1.1 |
 | `.npmrc` | Registry auth token template changed from `${GH_TOKEN}` to `{{GH_TOKEN}}` | `372b3f9` | First version of the lib. Need to take a look at frms-coe-startup-lib right after. |
 
 ---
@@ -47,8 +50,8 @@
 
 | File | Change type | Commits |
 |---|---|---|
-| `package.json` | Version/script metadata updates (no runtime symbols) | `372b3f9`, `961f5d9`, `f2d2828` |
-| `package-lock.json` | Dependency lock-state updates (no runtime symbols) | `372b3f9`, `961f5d9`, `f2d2828` |
+| `package.json` | Version bump to `7.0.1-rc.ak.17`; `publish:dev` tag changed to `psl` (no runtime symbols) | `372b3f9`, `961f5d9`, `f2d2828`, `d62b436` |
+| `package-lock.json` | Dependency lock-state updates (no runtime symbols) | `372b3f9`, `961f5d9`, `f2d2828`, `d62b436` |
 
 ---
 
