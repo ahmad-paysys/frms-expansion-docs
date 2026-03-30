@@ -1,5 +1,38 @@
 # Knowledge Transfer: BaseMessage Wiring in FRMS-COE-LIB
 
+- [Introduction](#introduction)
+- [Phase 1 -- Expansion of Interfaces and Protobuf](#phase-1----expansion-of-interfaces-and-protobuf)
+  - [1.1 The `BaseMessage` and `SupportedTransactionMessage` Interfaces](#11-the-basemessage-and-supportedtransactionmessage-interfaces)
+    - [MsgId](#msgid)
+    - [endpointPath](#endpointpath)
+    - [SupportedTransactionMessage](#supportedtransactionmessage)
+  - [1.2 Modification of the `RuleRequest` Interface](#12-modification-of-the-rulerequest-interface)
+  - [1.3 Protobuf Schema Expansion](#13-protobuf-schema-expansion)
+  - [1.4 Normalisation and Denormalisation in `protobuf.ts`](#14-normalisation-and-denormalisation-in-protobufts)
+  - [1.5 Transaction Type Guards](#15-transaction-type-guards)
+  - [1.6 Non-Breaking Nature of Phase 1](#16-non-breaking-nature-of-phase-1)
+- [Phase 2 -- Post-Phase-1 Additions: SafeObject, Schema Enforcement, and Redis Extensions](#phase-2----post-phase-1-additions-safeobject-schema-enforcement-and-redis-extensions)
+  - [2.1 The SafeObject Proxy Pattern (Not Applicable for Build 1.1)](#21-the-safeobject-proxy-pattern-not-applicable-for-build-11)
+    - [2.1.1 Schema Retrieval (Not Applicable for Build 1.1)](#211-schema-retrieval-not-applicable-for-build-11)
+    - [2.1.2 Schema Compilation (Not Applicable for Build 1.1)](#212-schema-compilation-not-applicable-for-build-11)
+    - [2.1.3 Proxy-Based Access Enforcement (Not Applicable for Build 1.1)](#213-proxy-based-access-enforcement-not-applicable-for-build-11)
+  - [2.2 Redis `getEndpointSchemaBundle` (Not Applicable for Build 1.1)](#22-redis-getendpointschemabundle-not-applicable-for-build-11)
+  - [2.3 Interface Barrel Export Updates](#23-interface-barrel-export-updates)
+  - [2.4 MetaData Interface Simplification](#24-metadata-interface-simplification)
+- [Phase 3 -- Rule Executor updates with optional Redis Integration](#phase-3----rule-executor-updates-with-optional-redis-integration)
+  - [Note: SafeObject and Schema retrieval, including endpointPath are no longer considered relevant for Build 1.1, meaning some parts of section 3 are not relevant for this build goals](#note-safeobject-and-schema-retrieval-including-endpointpath-are-no-longer-considered-relevant-for-build-11-meaning-some-parts-of-section-3-are-not-relevant-for-this-build-goals)
+  - [3.1 Goals](#31-goals)
+  - [3.2 Phase 3 Alt -- MsgId Population via EMS](#32-phase-3-alt----msgid-population-via-ems)
+- [Phase 4 -- Expansion to CIMS Service](#phase-4----expansion-to-cims-service)
+- [Summary for Build 1.1](#summary-for-build-11)
+  - [Event Monitoring Service](#event-monitoring-service)
+  - [Event Director](#event-director)
+  - [Rule Executor, including Rule Configs, `Rule.ts` written in Rule Studio, and the Rule Template](#rule-executor-including-rule-configs-rulets-written-in-rule-studio-and-the-rule-template)
+  - [Typology Processor](#typology-processor)
+  - [Transaction Aggregation Decisioning Processor](#transaction-aggregation-decisioning-processor)
+    - [TADP](#tadp)
+- [Summary of File Responsibilities](#summary-of-file-responsibilities)
+
 ## Introduction
 
 The `FRMS-COE-LIB` library is the shared foundation on which all Tazama fraud-risk-management services depend. Historically, the only transaction shape the library understood was `Pacs002` -- the ISO 20022 Financial Institution to Financial Institution Payment Status Report. Every interface, protobuf definition, Redis serialisation routine, and type guard was built around Pacs002 message type.
@@ -280,7 +313,7 @@ Previously, we incorrectly assumed that Event Director would not need to be move
 
 Without the updated contracts, Event Director silently drops fields during ingress and egress when messages are transported through NATS. These new contracts are already incorporated into the FRMS-COE-STARTUP-LIB `natsService`, and the implementation is designed to minimize downstream code changes.
 
-As a result, Event Director only needs to be moved to the `feat-paysys-poc` branch and have its `package.json` updated to use the newer versions of `FRMS-COE-LIB` and `FRMS-COE-STARTUP-LIB`.
+As a result, Event Director needs to be moved to the `feat-paysys-poc` branch and have its `package.json` updated to use the newer versions of `FRMS-COE-LIB` and `FRMS-COE-STARTUP-LIB`. Once this migration to new versions of `the FRMS-*` libs is done, the team can test if there's code update needed for Event Director. Run a message through ED from DEMS to a new Rule, and add logs in ED to check if the ingress/egress points to NATS drop any parts of the BaseMessage, especially Payload. 
 
 ### Rule Executor, including Rule Configs, `Rule.ts` written in Rule Studio, and the Rule Template
 
@@ -289,6 +322,8 @@ Work on the Rule Executor has been completed. Further details are documented els
 One small but intentional change was the addition of a log statement at line 32 in `execute.ts` to capture and display incoming transaction details. This log should remain in place until our processes are more robust and we have standardized our approach to handling transport-layer changes.
 
 A more significant change was the addition of Redis configuration to the database manager composition in the Rule Executor. Reeba has temporarily removed this change because of the current mismatch between how EMS sets up and uses Redis and how `FRMS-COE-LIB` defines Redis setup and usage through its contracts. Because of this mismatch, SafeObject is not being included in Build 1.1.
+
+Also, I have updated Nats-Utilities with latest `FRMS-*` libs and updated its code to make use of the helpers for BaseMessage and it works accurately. I have tested Nats Utilities over and over to make sure it works. In case there is a need to test a Rule container directly, Nats Utilities can be used with BaseMessage Rule containers too.
 
 Once the EMS codebase has been cleaned up, we can revisit the SafeObject approach. There are also broader semantic issues with SafeObject that we plan to address as part of the same post-Build 1.1 cleanup work.
 
